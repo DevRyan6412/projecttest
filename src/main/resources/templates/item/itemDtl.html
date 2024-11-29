@@ -183,7 +183,7 @@
         }
 
         // IAMPORT 초기화 (IAMPORT에서 제공한 키로 대체)
-        IMP.init("imp07018502");  // "Your Iamport Key"
+        IMP.init("");  // "Your Iamport Key"
 
         function requestPay() {
             var price = parseInt($("#price").val());  // 가격을 읽어옴 (숨겨진 input#price에서 값 가져옴)
@@ -193,7 +193,7 @@
             var totalAmount = price * count;  // 총 금액 = 가격 * 수량
 
             IMP.request_pay({
-                channelKey: "channel-key-55bfe3cc-6996-46c1-94a5-7bbb1611709b",  // IAMPORT에서 제공한 채널 키
+                channelKey: "",  // IAMPORT에서 제공한 채널 키
                 pay_method: "card",  // 결제 방법 예시 (카드 결제)
                 merchant_uid: itemId + "_" + new Date().getTime(),  // 유니크한 주문 ID
                 amount: totalAmount,  // 가격 설정
