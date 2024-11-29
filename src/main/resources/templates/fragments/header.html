@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<style>
+
+
+
+</style>
+<div th:fragment="header">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container px-4 px-lg-5">
+      <a class="navbar-brand" href="/">Start Bootstrap</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Category</a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item" href="#!">New Arrivals</a></li>
+              <li><a class="dropdown-item" href="#!">Sale</a></li>
+              <li><hr class="dropdown-divider" /></li>
+              <li><a class="dropdown-item" href="#!">Bed</a></li>
+              <li><a class="dropdown-item" href="#!">Table</a></li>
+              <li><a class="dropdown-item" href="#!">Chair</a></li>
+              <li><a class="dropdown-item" href="#!">Storage/Organization</a></li>
+              <li><a class="dropdown-item" href="#!">Light</a></li>
+              <li><a class="dropdown-item" href="#!">Decorations</a></li>
+            </ul>
+          </li>
+          <li class="nav-item"><a class="nav-link" aria-current="page" href="#!">None1</a></li>
+          <li class="nav-item"><a class="nav-link" href="#!">None2</a></li>
+          <li class="nav-item dropdown" sec:authorize="hasAnyAuthority('ROLE_ADMIN')">
+            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Seller</a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_ADMIN')">
+                <a class="dropdown-item" href="/admin/item/new">상품 등록</a>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_ADMIN')">
+                <a class="dropdown-item" href="/admin/items">상품 관리</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">My Page</a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li sec:authorize="isAuthenticated()">
+                <a class="dropdown-item" href="/orders">Order History</a>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li sec:authorize="isAuthenticated()">
+                <a class="dropdown-item" href="#!">Q & A</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <!--Login & Logout & Signup-->
+        <form class="d-flex" action="/members/login" method="get" sec:authorize="isAnonymous()">
+          <button class="btn btn-outline-dark" type="submit">
+            Login
+          </button>
+        </form>
+        <form class="d-flex" action="/members/logout" method="get" sec:authorize="isAuthenticated()">
+          <button class="btn btn-outline-dark" type="submit">
+            Logout
+          </button>
+        </form>
+        <form class="d-flex" action="/members/new" method="get" sec:authorize="isAnonymous()">
+          <button class="btn btn-outline-dark" type="submit">
+            Sign up
+          </button>
+        </form>
+        <!--Search Form-->
+        <form class="d-flex" th:action="@{/}" method="get">
+          <input name="searchQuery" class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+          <button class="btn btn-dark" type="submit">Search</button>
+        </form>
+        <!--Cart button-->
+        <form class="d-flex" action="/cart" method="get">
+          <button class="btn btn-outline-dark" type="submit">
+            <i class="bi-cart-fill me-1"></i>
+            Cart
+            <span class="badge bg-dark text-white ms-1 rounded-pill">0</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </nav>
+  <!--End Nav-->
+
+</div>
+
+</html>
