@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>내 정보 수정</title>
+</head>
+<body>
+<h1>내 정보 수정</h1>
+<form th:action="@{/members/edit}" th:object="${memberFormDto}" method="post">
+    <label for="name">이름:</label>
+    <input type="text" id="name" name="name" th:field="*{name}" required>
+    <br>
+    <label for="address">주소:</label>
+    <input type="text" id="address" name="address" th:field="*{address}" required>
+    <br>
+    <label for="detailAddress">상세 주소:</label>
+    <input type="text" id="detailAddress" name="detailAddress" th:field="*{detailAddress}">
+    <br>
+    <label for="postcode">우편번호:</label>
+    <input type="text" id="postcode" name="postcode" th:field="*{postcode}">
+    <br>
+    <button type="submit">수정 완료</button>
+</form>
+
+<form th:action="@{/member/changePassword}" method="post">
+    <div>
+        <label for="currentPassword">현재 비밀번호</label>
+        <input type="password" id="currentPassword" name="currentPassword" required>
+    </div>
+    <div>
+        <label for="newPassword">새 비밀번호</label>
+        <input type="password" id="newPassword" name="newPassword" required>
+    </div>
+    <div>
+        <label for="confirmPassword">새 비밀번호 확인</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" required>
+    </div>
+    <button type="submit">변경</button>
+</form>
+
+
+<a th:href="@{/members/mypage}">취소</a>
+</body>
+</html>

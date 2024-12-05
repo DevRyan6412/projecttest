@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>내 정보</title>
+  <style>
+    .profile-container {
+      width: 50%;
+      margin: auto;
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .profile-item {
+      margin-bottom: 15px;
+    }
+    .profile-item label {
+      font-weight: bold;
+      display: inline-block;
+      width: 120px;
+    }
+  </style>
+
+  <!-- CSRF 토큰을 메타 태그에 추가 -->
+  <meta name="_csrf" th:content="${_csrf.token}" />
+  <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+  <!-- 다음 주소 API -->
+  <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <script>
+    function openPostcodePopup() {
+      new daum.Postcode({
+        oncomplete: function (data) {
+          const addressField = document.querySelector("#addressField");
+          const postcodeField = document.querySelector("#postcodeField");
+          const detailAddressField = document.querySelector("#detailAddressField");
+
+          // 주소와 우편번호를 입력 필드에 반영
+          addressField.value = data.address;
+          postcodeField.value = data.zonecode;
+
+          // 상세주소 초기화 및 활성화
+          detailAddressField.value = "";
+          detailAddressField.removeAttribute("readonly");
+          detailAddressField.focus(); // 상세주소 입력창으로 포커스 이동
+        }
+      }).open();
+    }
+
+    function toggleEdit(button) {
+      const item = button.closest(".profile-item");
+      const displaySpan = item.querySelector(".field-display");
+      const inputField = item.querySelector(".field-input");
+      const saveButton = item.querySelector(".save-button");
+
+      displaySpan.style.display = "none";
+      inputField.style.display = "inline";
+      inputField.value = displaySpan.textContent;
+
+      button.style.display = "none";
+      saveButton.style.display = "inline";
+    }
+
+    function saveField(button) {
+      const item = button.closest(".profile-item");
+      const fieldName = item.dataset.field || "address";
+      const addressField = document.querySelector("#addressField");
+      const postcodeField = document.querySelector("#postcodeField");
+      const detailAddressField = document.querySelector("#detailAddressField");
+      const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
+
+      let payload = {};
+      if (fieldName === "address") {
+        payload = {
+          address: addressField.value,
+          postcode: postcodeField.value,
+          detailAddress: detailAddressField.value,
+        };
+      } else {
+        const inputField = item.querySelector(".field-input");
+        payload = { value: inputField.value };
+      }
+
+      fetch(`/members/update/${fieldName}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          [csrfHeader]: csrfToken,
+        },
+        body: JSON.stringify(payload),
+      })
+              .then((response) => {
+                if (response.ok) {
+                  if (fieldName === "address") {
+                    alert("주소 정보가 성공적으로 업데이트되었습니다.");
+                  } else {
+                    const displaySpan = item.querySelector(".field-display");
+                    const inputField = item.querySelector(".field-input");
+                    displaySpan.textContent = inputField.value;
+                    displaySpan.style.display = "inline";
+                    inputField.style.display = "none";
+                    button.style.display = "none";
+                    item.querySelector(".edit-button").style.display = "inline";
+                  }
+                } else {
+                  alert("수정에 실패했습니다.");
+                }
+              })
+              .catch((error) => {
+                console.error("Error:", error);
+                alert("오류가 발생했습니다.");
+              });
+    }
+
+    function saveAddress() {
+      const addressField = document.querySelector("#addressField");
+      const postcodeField = document.querySelector("#postcodeField");
+      const detailAddressField = document.querySelector("#detailAddressField");
+      const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
+
+      const payload = {
+        address: addressField.value,
+        postcode: postcodeField.value,
+        detailAddress: detailAddressField.value,
+      };
+
+      fetch(`/members/update/address`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          [csrfHeader]: csrfToken,
+        },
+        body: JSON.stringify(payload),
+      })
+              .then((response) => {
+                if (response.ok) {
+                  alert("주소 정보가 성공적으로 업데이트되었습니다.");
+                } else {
+                  alert("주소 업데이트에 실패했습니다.");
+                }
+              })
+              .catch((error) => {
+                console.error("Error:", error);
+                alert("오류가 발생했습니다.");
+              });
+    }
+
+
+    function savePassword() {
+      const currentPassword = document.querySelector("#currentPassword").value;
+      const newPassword = document.querySelector("#newPassword").value;
+      const confirmPassword = document.querySelector("#confirmPassword").value;
+      const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
+
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        alert("모든 비밀번호 필드를 입력하세요.");
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        alert("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+        return;
+      }
+
+      const payload = {
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+        confirmPassword: confirmPassword,
+      };
+
+      fetch(`/members/update/password`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          [csrfHeader]: csrfToken,
+        },
+        body: JSON.stringify(payload),
+      })
+              .then((response) => {
+                if (response.ok) {
+                  alert("비밀번호가 성공적으로 변경되었습니다.");
+                  // 입력 필드 초기화
+                  document.querySelector("#currentPassword").value = "";
+                  document.querySelector("#newPassword").value = "";
+                  document.querySelector("#confirmPassword").value = "";
+                } else {
+                  alert("비밀번호 변경에 실패했습니다.");
+                }
+              })
+              .catch((error) => {
+                console.error("Error:", error);
+                alert("오류가 발생했습니다.");
+              });
+    }
+
+  </script>
+</head>
+<body>
+<div class="profile-container">
+  <h2>내 정보</h2>
+
+  <!-- 가입 구분 -->
+  <div class="profile-item">
+    <label>가입 구분:</label>
+    <span th:if="${member.role.name() == 'USER'}">일반 회원</span>
+    <span th:if="${member.role.name() == 'MANAGER'}">판매자</span>
+    <span th:if="${member.role.name() == 'ADMIN'}">관리자</span>
+  </div>
+
+  <!-- 이름 -->
+  <div class="profile-item" data-field="name">
+    <label>이름:</label>
+    <span th:text="${member.name}" class="field-display"></span>
+    <input type="text" class="field-input" style="display: none;" />
+    <button type="button" class="edit-button" onclick="toggleEdit(this)">수정</button>
+    <button type="button" class="save-button" style="display: none;" onclick="saveField(this)">저장</button>
+  </div>
+
+
+  <!-- 사업자 등록번호 -->
+  <div class="profile-item" th:if="${member.role.name() == 'MANAGER'}">
+    <label>사업자 등록번호:</label>
+    <span th:if="${member.businessRegistrationNumber != null}" th:text="${member.businessRegistrationNumber}">
+    </span>
+    <span th:if="${member.businessRegistrationNumber == null}">
+        등록된 사업자 등록번호가 없습니다.
+    </span>
+  </div>
+
+  <!-- 이메일 -->
+  <div class="profile-item" data-field="email">
+    <label>이메일:</label>
+    <span th:text="${member.email}" class="field-display"></span>
+    <input type="email" class="field-input" style="display: none;" />
+    <button type="button" class="edit-button" onclick="toggleEdit(this)">수정</button>
+    <button type="button" class="save-button" style="display: none;" onclick="saveField(this)">저장</button>
+    <p style="color: red">이메일 수정시 로그아웃됩니다.</p>
+  </div>
+
+
+  <!-- 비밀번호 변경 -->
+  <div class="profile-item" data-field="password">
+    <label>비밀번호 변경:</label>
+    <div>
+      <input type="password" id="currentPassword" placeholder="현재 비밀번호" class="field-input" />
+    </div>
+    <div>
+      <input type="password" id="newPassword" placeholder="새 비밀번호" class="field-input" />
+    </div>
+    <div>
+      <input type="password" id="confirmPassword" placeholder="새 비밀번호 확인" class="field-input" />
+    </div>
+    <button type="button" onclick="savePassword()">저장</button>
+  </div>
+
+
+
+
+
+  <!-- 주소 -->
+  <div class="profile-item" data-field="address">
+    <label>주소:</label>
+    <input type="text" id="addressField" placeholder="주소를 입력하세요" readonly th:value="${member.address}" />
+    <button type="button" onclick="openPostcodePopup()">주소 찾기</button>
+  </div>
+  <div class="profile-item">
+    <label>우편번호:</label>
+    <input type="text" id="postcodeField" placeholder="우편번호" readonly th:value="${member.postcode}" />
+  </div>
+  <div class="profile-item">
+    <label>상세 주소:</label>
+    <input type="text" id="detailAddressField" placeholder="상세 주소를 입력하세요" readonly th:value="${member.detailAddress}" />
+    <button type="button" onclick="saveField(this)">저장</button>
+  </div>
+
+  <a href="/" class="btn btn-primary">홈으로</a>
+</div>
+</body>
+</html>

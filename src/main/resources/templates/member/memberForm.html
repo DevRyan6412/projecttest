@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+<head>
+  <title>회원가입</title>
+  <!-- 사용자 CSS 추가 -->
+  <th:block layout:fragment="css">
+    <style>
+      .fieldError {
+        color: #bd2130;
+      }
+    </style>
+  </th:block>
+</head>
+<body>
+<!-- 사용자 스크립트 추가 -->
+<th:block layout:fragment="script">
+  <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <script th:inline="javascript">
+    // 가입 구분에 따른 필드 표시 토글
+    function toggleRole() {
+      const roleManager = document.getElementById("role-manager").checked;
+      const businessSection = document.getElementById("business-section");
+      const businessInput = document.getElementById("businessRegistrationNumber");
+
+      if (roleManager) {
+        businessSection.style.display = "block";
+        businessInput.setAttribute("required", "required"); // 필수 입력 설정
+      } else {
+        businessSection.style.display = "none";
+        businessInput.removeAttribute("required"); // 필수 입력 해제
+        businessInput.value = ""; // 필드 초기화
+      }
+    }
+
+    // 페이지 로드 후 초기 설정
+    window.onload = function () {
+      toggleRole(); // 초기 로드 시 상태 설정
+    };
+
+    // 폼 검증
+    function validateForm() {
+      let isValid = true;
+
+      // 이메일 중복 확인 검증
+      const emailValidated = document.getElementById("email-validated").value;
+      const emailResultField = document.getElementById("email-check-result");
+      if (emailValidated !== "true") {
+        emailResultField.textContent = "이메일 중복확인은 필수입니다.";
+        emailResultField.style.color = "red";
+        isValid = false;
+      } else {
+        emailResultField.textContent = "";
+      }
+
+      // 필수 입력 필드 검증
+      const requiredFields = document.querySelectorAll("input[required]");
+      requiredFields.forEach(field => {
+        const errorField = field.nextElementSibling;
+        if (!field.value.trim()) {
+          if (errorField) {
+            errorField.textContent = `${field.placeholder}은(는) 필수 항목입니다.`;
+            errorField.style.color = "red";
+          }
+          isValid = false;
+        } else if (errorField) {
+          errorField.textContent = "";
+        }
+      });
+
+      return isValid;
+    }
+
+    // 이메일 중복 확인
+    function checkEmail(event) {
+      event.preventDefault();
+
+      const emailField = document.getElementById("email");
+      const resultField = document.getElementById("email-check-result");
+      const emailValidatedField = document.getElementById("email-validated");
+      const email = emailField.value;
+
+      fetch(`/members/check-email?email=${encodeURIComponent(email)}`)
+              .then(response => {
+                if (!response.ok) throw new Error("이메일 중복 확인 요청 실패");
+                return response.json();
+              })
+              .then(isDuplicated => {
+                if (isDuplicated) {
+                  resultField.textContent = "이미 사용 중인 이메일입니다.";
+                  resultField.style.color = "red";
+                  emailValidatedField.value = "false";
+                } else {
+                  resultField.textContent = "사용 가능한 이메일입니다.";
+                  resultField.style.color = "green";
+                  emailValidatedField.value = "true";
+                }
+              })
+              .catch(error => {
+                resultField.textContent = "중복 확인 중 오류가 발생했습니다.";
+                resultField.style.color = "orange";
+                emailValidatedField.value = "false";
+                console.error(error);
+              });
+    }
+
+    // 비밀번호 확인
+    function checkPasswordMatch() {
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      const resultField = document.getElementById("password-check-result");
+
+      if (!confirmPassword) {
+        resultField.textContent = "";
+        return;
+      }
+
+      if (password === confirmPassword) {
+        resultField.textContent = "비밀번호가 일치합니다.";
+        resultField.style.color = "green";
+      } else {
+        resultField.textContent = "비밀번호가 일치하지 않습니다.";
+        resultField.style.color = "red";
+      }
+    }
+
+    // 주소 검색
+    function execDaumPostcode() {
+      new daum.Postcode({
+        oncomplete: function (data) {
+          document.getElementById("postcode").value = data.zonecode;
+          document.getElementById("address").value = data.roadAddress;
+          document.getElementById("detailAddress").focus();
+        }
+      }).open();
+    }
+  </script>
+</th:block>
+
+<div layout:fragment="content">
+  <form action="/members/new" role="form" method="post" th:object="${memberFormDto}" onsubmit="return validateForm()">
+    <!-- 가입 구분 -->
+    <div class="form-group">
+      <label>가입 구분</label><br>
+      <input type="radio" id="role-user" name="role" value="USER" checked onclick="toggleRole()"> 일반 회원
+      <input type="radio" id="role-manager" name="role" value="MANAGER" onclick="toggleRole()"> 판매자
+    </div>
+
+    <!-- 이름 -->
+    <div class="form-group">
+      <label id="name-label" th:for="name">이름</label>
+      <input type="text" id="name" th:field="*{name}" class="form-control" placeholder="이름을 입력해주세요" required>
+      <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="fieldError"></p>
+    </div>
+
+    <!-- 사업자 등록번호 -->
+    <div class="form-group" id="business-section" style="display: none;">
+      <label for="businessRegistrationNumber">사업자 등록번호</label>
+      <input type="text" id="businessRegistrationNumber" th:field="*{businessRegistrationNumber}" class="form-control" placeholder="사업자 등록번호를 입력해주세요">
+      <small class="form-text text-danger" id="business-error" style="display: none;">사업자 등록번호는 필수 입력값입니다.</small>
+    </div>
+
+    <!-- 이메일 -->
+    <div class="form-group">
+      <label th:for="email">이메일 주소</label>
+      <input type="email" id="email" name="email" th:field="*{email}" placeholder="이메일을 입력해주세요" required>
+      <button id="check-email-button" onclick="checkEmail(event)">중복 확인</button>
+      <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="fieldError"></p>
+      <p id="email-check-result"></p>
+      <input type="hidden" id="email-validated" value="false">
+    </div>
+
+    <!-- 비밀번호 -->
+    <div class="form-group">
+      <label th:for="password">비밀번호</label>
+      <input type="password" name="password" id="password" th:field="*{password}" class="form-control" placeholder="비밀번호 입력" required>
+      <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="fieldError"></p>
+    </div>
+
+    <!-- 비밀번호 확인 -->
+    <div class="form-group">
+      <label th:for="confirmPassword">비밀번호 확인</label>
+      <input type="password" name="confirmPassword" id="confirmPassword" class="form-control" placeholder="비밀번호를 다시 입력해주세요" oninput="checkPasswordMatch()" required>
+      <p id="password-check-result"></p>
+    </div>
+
+    <!-- 주소 -->
+    <div class="form-group">
+      <label th:for="address">주소</label>
+      <div class="input-group">
+        <input type="text" id="postcode" th:field="*{postcode}" class="form-control" placeholder="우편번호" readonly>
+        <button type="button" class="btn btn-secondary" onclick="execDaumPostcode()">주소 검색</button>
+      </div>
+      <input type="text" id="address" th:field="*{address}" class="form-control" placeholder="주소" readonly>
+      <input type="text" id="detailAddress" th:field="*{detailAddress}" class="form-control" placeholder="상세 주소를 입력해주세요" required>
+      <p th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="fieldError"></p>
+    </div>
+
+    <!-- 제출 -->
+    <div style="text-align: center;">
+      <button type="submit" class="btn btn-dark">회원가입</button>
+    </div>
+
+    <!-- CSRF 토큰 -->
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+  </form>
+</div>
+</body>
+</html>
