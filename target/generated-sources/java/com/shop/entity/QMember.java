@@ -23,6 +23,8 @@ public class QMember extends EntityPathBase<Member> {
 
     public final StringPath address = createString("address");
 
+    public final NumberPath<Integer> availableMileage = createNumber("availableMileage", Integer.class);
+
     //inherited
     public final StringPath createdBy = _super.createdBy;
 

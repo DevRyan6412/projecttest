@@ -24,6 +24,8 @@ public class QCart extends EntityPathBase<Cart> {
 
     public final QBaseEntity _super = new QBaseEntity(this);
 
+    public final ListPath<CartItem, QCartItem> cartItems = this.<CartItem, QCartItem>createList("cartItems", CartItem.class, QCartItem.class, PathInits.DIRECT2);
+
     //inherited
     public final StringPath createdBy = _super.createdBy;
 

@@ -31,9 +31,13 @@ public class QCartItem extends EntityPathBase<CartItem> {
     //inherited
     public final StringPath createdBy = _super.createdBy;
 
+    public final NumberPath<Double> finalPrice = createNumber("finalPrice", Double.class);
+
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final QItem item;
+
+    public final NumberPath<Integer> mileageApplied = createNumber("mileageApplied", Integer.class);
 
     //inherited
     public final StringPath modifiedBy = _super.modifiedBy;

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>쿠폰 관리</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        #createCouponModal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            display: none;
+            width: 300px;
+        }
+
+        #createCouponModal h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<h1>쿠폰 관리</h1>
+
+<!-- 성공 메시지 -->
+<div id="successMessage" style="display: none; color: green; text-align: center;">쿠폰이 성공적으로 생성되었습니다!</div>
+
+<!-- 쿠폰 생성 버튼 -->
+<div style="text-align: center;">
+    <button id="openCreateModal">쿠폰 생성</button>
+</div>
+
+<!-- 쿠폰 리스트 테이블 -->
+<table class="table">
+    <thead>
+    <tr>
+        <th>쿠폰 코드</th>
+        <th>설명</th>
+        <th>할인 타입</th>
+        <th>할인율/금액</th>
+        <th>액션</th>
+    </tr>
+    </thead>
+    <tbody id="couponList">
+    <tr th:each="coupon : ${coupons}">
+        <td th:text="${coupon.couponCode}"></td>
+        <td th:text="${coupon.description}"></td>
+        <td th:text="${coupon.discountType}"></td>
+        <td th:text="${coupon.discountType == 'percent'
+            ? T(java.text.DecimalFormat).getInstance().format(coupon.discountRate * 100) + '%'
+            : T(java.text.DecimalFormat).getInstance().format(coupon.discountAmount) + '원'}"></td>
+        <td>
+            <button class="btn btn-danger" th:data-coupon-code="${coupon.couponCode}" onclick="deleteCoupon(this)">삭제</button>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- 쿠폰 생성 모달 -->
+<div id="createCouponModal">
+    <h2>쿠폰 생성</h2>
+    <form id="createCouponForm">
+        <label for="description">쿠폰 설명:</label>
+        <input type="text" id="description" name="description" required/>
+        <br><br>
+
+        <label>할인 적용 방식:</label>
+        <label>
+            <input type="radio" name="discountType" value="percent" checked onclick="toggleDiscountFields()"> 퍼센트
+        </label>
+        <label>
+            <input type="radio" name="discountType" value="amount" onclick="toggleDiscountFields()"> 금액
+        </label>
+        <br><br>
+
+        <!-- 할인율 입력 필드 -->
+        <div id="discountRateField">
+            <label for="discountRate">퍼센트 할인율:</label>
+            <input type="number" id="discountRate" name="discountRate" min="0" max="100" required/>
+        </div>
+
+        <!-- 할인 금액 입력 필드 -->
+        <div id="discountAmountField" style="display: none;">
+            <label for="discountAmount">금액 할인:</label>
+            <input type="number" id="discountAmount" name="discountAmount" min="0"/>
+        </div>
+
+        <br>
+        <button type="submit">쿠폰 생성</button>
+    </form>
+</div>
+
+<script>
+    // 할인 필드 전환
+    function toggleDiscountFields() {
+        const discountType = document.querySelector('input[name="discountType"]:checked').value;
+
+        if (discountType === 'percent') {
+            document.getElementById('discountRateField').style.display = 'block';
+            document.getElementById('discountAmountField').style.display = 'none';
+            document.getElementById('discountRate').setAttribute('required', 'required');
+            document.getElementById('discountAmount').removeAttribute('required');
+        } else {
+            document.getElementById('discountRateField').style.display = 'none';
+            document.getElementById('discountAmountField').style.display = 'block';
+            document.getElementById('discountAmount').setAttribute('required', 'required');
+            document.getElementById('discountRate').removeAttribute('required');
+        }
+    }
+
+    // 쿠폰 삭제
+    function deleteCoupon(button) {
+        const couponCode = button.getAttribute('data-coupon-code');
+        if (confirm("이 쿠폰을 삭제하시겠습니까?")) {
+            const csrfToken = $("meta[name='_csrf']").attr("content");
+            const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+            $.ajax({
+                url: '/coupon/delete/' + couponCode,
+                type: 'DELETE',
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader(csrfHeader, csrfToken);
+                },
+                success: function () {
+                    alert('쿠폰이 삭제되었습니다.');
+                    location.reload();
+                },
+                error: function (xhr) {
+                    alert('쿠폰 삭제에 실패했습니다.');
+                }
+            });
+        }
+    }
+
+    // 쿠폰 생성
+    $('#createCouponForm').submit(function (event) {
+        event.preventDefault();
+
+        const data = $(this).serialize();
+        const csrfToken = $("meta[name='_csrf']").attr("content");
+        const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+        $.ajax({
+            url: '/coupon/create',
+            type: 'POST',
+            data: data,
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader(csrfHeader, csrfToken);
+            },
+            success: function () {
+                $('#successMessage').show().delay(3000).fadeOut();
+                $('#createCouponModal').hide();
+                location.reload();
+            },
+            error: function (xhr) {
+                alert('쿠폰 생성에 실패했습니다.');
+            }
+        });
+    });
+
+    // 모달 열기
+    $('#openCreateModal').click(function () {
+        $('#createCouponModal').show();
+    });
+
+    // 페이지 로드 시 초기화
+    $(document).ready(function () {
+        toggleDiscountFields();
+    });
+</script>
+</body>
+</html>

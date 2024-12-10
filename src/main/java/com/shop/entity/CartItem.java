@@ -12,7 +12,7 @@ import javax.persistence.*;
 public class CartItem extends BaseEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="cart_item_id")
     private Long id;
 
@@ -25,8 +25,10 @@ public class CartItem extends BaseEntity {
     private Item item;
 
     private int count;
+    private double finalPrice;  // 마일리지 적용 후 최종 가격
+    private int mileageApplied;  // 사용된 마일리지
 
-    public static CartItem createCartItem(Cart cart, Item item, int count){
+    public static CartItem createCartItem(Cart cart, Item item, int count) {
         CartItem cartItem = new CartItem();
         cartItem.setCart(cart);
         cartItem.setItem(item);

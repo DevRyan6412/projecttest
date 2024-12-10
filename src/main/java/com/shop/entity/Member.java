@@ -14,12 +14,13 @@ import javax.persistence.*;
 @Getter
 @Setter
 @ToString
-public class Member extends BaseEntity{
+public class Member extends BaseEntity {
 
     @Id
     @Column
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
     private String name;
 
     @Column(unique = true)
@@ -29,6 +30,12 @@ public class Member extends BaseEntity{
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    // 마일리지 설정 및 조회 메소드 추가
+    @Getter
+    @Setter
+    @Column(nullable = false)
+    private int availableMileage = 0; // 사용 가능한 마일리지 필드 추가
 
     public static Member createMember(MemberFormDto memberFormDto, PasswordEncoder passwordEncoder){
         Member member = new Member();

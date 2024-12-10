@@ -1,8 +1,11 @@
 package com.shop.controller;
 
+import com.shop.dto.CommentDto;
 import com.shop.dto.ItemFormDto;
 import com.shop.dto.ItemSearchDto;
+import com.shop.entity.Comment;
 import com.shop.entity.Item;
+import com.shop.service.CommentService;
 import com.shop.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +31,7 @@ import java.util.Optional;
 public class ItemController {
 
     private final ItemService itemService;
+    private final CommentService commentService;
 
     @GetMapping(value = "/admin/item/new")
     public String itemForm(Model model){
@@ -98,11 +103,13 @@ public class ItemController {
     }
 
     @GetMapping(value = "/item/{itemId}")
-    public String itemDtl(Model model, @PathVariable("itemId") Long itemId){
+    public String itemDtl(Model model, @PathVariable("itemId") Long itemId, Principal principal){
         ItemFormDto itemFormDto = itemService.getItemDtl(itemId);
         model.addAttribute("item", itemFormDto);
+        // 해당 아이템에 대한 댓글 목록 조회
+        List<Comment> comments = commentService.getCommentsByItem(itemId);
+        model.addAttribute("comments", comments);
+        model.addAttribute("commentDto", new CommentDto());
         return "item/itemDtl";
     }
-
-
 }

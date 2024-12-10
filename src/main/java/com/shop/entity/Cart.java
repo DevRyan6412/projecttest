@@ -5,23 +5,54 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
-@Table(name = "cart") //데이터 베이스에 생성되는 table 이름을 지정해주고싶을때 사용함
+@Table(name = "cart")
 @Getter
 @Setter
 @ToString
-public class Cart extends BaseEntity{
+public class Cart extends BaseEntity {
 
     @Id
-    @Column(name = "cart_id") //테이블에 column의 이름을 지정해주고싶을떄
     @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "cart_id")
     private Long id;
 
-    @OneToOne//원투원을 지정하면 테이블상에서 FKEY(외래키)가 됨
-    @JoinColumn(name="member_id")// 매핑할 외래키의 name으로 이름을 지정
+    @OneToOne
+    @JoinColumn(name = "member_id")
     private Member member;
 
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItem> cartItems;  // 장바구니에 담긴 상품들
+
+    // 장바구니 총 금액 계산
+    public double getTotalAmount() {
+        return cartItems.stream()
+                .mapToDouble(cartItem -> cartItem.getItem().getPrice() * cartItem.getCount())
+                .sum();
+    }
+
+    // 마일리지 적용
+    public void applyMileage(double availableMileage) {
+        double totalAmount = getTotalAmount();
+        double mileageToUse = Math.min(availableMileage, totalAmount);
+
+        for (CartItem cartItem : cartItems) {
+            double itemTotalPrice = cartItem.getItem().getPrice() * cartItem.getCount();
+            double itemFinalPrice = itemTotalPrice - (itemTotalPrice * (mileageToUse / totalAmount));
+            cartItem.setFinalPrice(itemFinalPrice);  // 각 상품에 최종 가격 설정
+        }
+    }
+
+    // 최종 결제 금액 계산
+    public double getFinalAmount() {
+        return cartItems.stream()
+                .mapToDouble(CartItem::getFinalPrice)
+                .sum();
+    }
+
+    // Cart 생성 메소드
     public static Cart createCart(Member member) {
         Cart cart = new Cart();
         cart.setMember(member);
