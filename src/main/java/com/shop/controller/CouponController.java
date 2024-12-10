@@ -24,7 +24,7 @@ public class CouponController {
     // 쿠폰 생성 폼을 보여주는 메소드
     @GetMapping("/coupon/create")
     public String showCouponForm() {
-        return "coupon/couponForm";
+        return "redirect:/coupon/list";
     }
 
     @PostMapping("/coupon/create")
@@ -38,10 +38,10 @@ public class CouponController {
             // discountRate 또는 discountAmount 중 하나는 필수적으로 제공되어야 함
             CouponDTO couponDTO = couponService.createCoupon(description, discountRate, discountAmount, discountType);
             model.addAttribute("coupon", couponDTO);
-            return "coupon/couponSuccess"; // 쿠폰 생성 후 성공 페이지로 이동
+            return "redirect:/coupon/list"; // 쿠폰 생성 후 성공 페이지로 이동
         } catch (IllegalArgumentException e) {
             model.addAttribute("errorMessage", e.getMessage());
-            return "coupon/couponForm"; // 에러 메시지를 표시하며 다시 폼으로
+            return "redirect:/coupon/list"; // 에러 메시지를 표시하며 다시 폼으로
         }
     }
 
