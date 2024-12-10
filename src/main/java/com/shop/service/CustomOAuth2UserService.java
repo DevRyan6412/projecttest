@@ -1,7 +1,9 @@
 package com.shop.service;
 
 import com.shop.constant.Role;
+import com.shop.entity.Cart;
 import com.shop.entity.Member;
+import com.shop.repository.CartRepository;
 import com.shop.repository.MemberRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +26,14 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CartRepository cartRepository;
 
-    public CustomOAuth2UserService(MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
+    public CustomOAuth2UserService(MemberRepository memberRepository,
+                                   PasswordEncoder passwordEncoder,
+                                   CartRepository cartRepository) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
+        this.cartRepository = cartRepository;
     }
 
     @Override
@@ -89,22 +95,26 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
      * @param nickname 카카오 닉네임
      * @return 저장된 Member 객체
      */
+
     private Member saveKakaoMember(String email, String nickname) {
         Member member = new Member();
         member.setEmail(email);
         member.setName(nickname);
-        member.setRole(Role.USER); // 기본 역할 설정
-
-        // 기본값 설정
+        member.setRole(Role.USER);
         member.setPostcode("00000");
         member.setAddress("카카오 회원");
         member.setDetailAddress("카카오 회원 기본 주소");
-
-        // 기본 비밀번호 설정 및 암호화
         member.setPassword(passwordEncoder.encode("goott7533"));
 
+        // 회원 저장
+        member = memberRepository.save(member);
+
+        // 장바구니 생성 및 저장
+        Cart cart = Cart.createCart(member);
+        cartRepository.save(cart);
+
         logger.info("새로운 카카오 회원 생성: {}", member);
-        return memberRepository.save(member);
+        return member;
     }
 }
 

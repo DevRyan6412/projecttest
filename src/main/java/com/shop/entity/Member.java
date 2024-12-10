@@ -20,10 +20,10 @@ public class Member extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-
+    @Column(nullable = false)
     private String name;
 
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
     private String password;
@@ -44,6 +44,9 @@ public class Member extends BaseEntity {
 //    @Size(min = 10, max = 10, message = "사업자 등록번호는 정확히 10자리여야 합니다.")
     private String businessRegistrationNumber;
 
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Cart cart;
+
     public static Member createMember(MemberFormDto memberFormDto, PasswordEncoder passwordEncoder) {
         Member member = new Member();
         member.setName(memberFormDto.getName());
@@ -53,7 +56,15 @@ public class Member extends BaseEntity {
         member.setDetailAddress(memberFormDto.getDetailAddress());
         String password = passwordEncoder.encode(memberFormDto.getPassword());
         member.setPassword(password);
-        member.setRole(Role.ADMIN);
+        // memberFormDto에서 role을 가져와서 설정
+        member.setRole(memberFormDto.getRole() != null ? memberFormDto.getRole() : Role.USER);
         return member;
+    }
+
+    public void setCart(Cart cart) {
+        this.cart = cart;
+        if (cart != null && cart.getMember() != this) {
+            cart.setMember(this);
+        }
     }
 }
