@@ -6,7 +6,6 @@
 <head>
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-
     <title>Shop Homepage - Start Bootstrap Template</title>
     <!-- Favicon-->
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
@@ -14,41 +13,39 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet" />
     <!-- Core theme CSS (includes Bootstrap)-->
     <link href="/css/styles.css" rel="stylesheet" />
-
 </head>
+
 <th:block layout:fragment="css">
-<style>
-.mgb-15{
-    margin-bottom:15px;
-}
-.mgt-30{
-    margin-top:30px;
-}
-.mgt-50{
-    margin-top:50px;
-}
-.repImgDiv{
-    margin-right:15px;
-    height:auto;
-    width:50%;
-}
-.repImg{
-    width:100%;
-    height:400px;
-}
-.wd50{
-    height:auto;
-    width:50%;
-}
-</style>
+    <style>
+        .mgb-15{
+            margin-bottom:15px;
+        }
+        .mgt-30{
+            margin-top:30px;
+        }
+        .mgt-50{
+            margin-top:50px;
+        }
+        .repImgDiv{
+            margin-right:15px;
+            height:auto;
+            width:50%;
+        }
+        .repImg{
+            width:100%;
+            height:400px;
+        }
+        .wd50{
+            height:auto;
+            width:50%;
+        }
+    </style>
 </th:block>
-<!-- 사용자 스크립트 추가 -->
+
 <th:block layout:fragment="script">
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script>
-<!--    <script th:inline="javascript">-->
         $(document).ready(function(){
-
             calculateTotalPrice();
 
             $("#count").change( function(){
@@ -91,14 +88,12 @@
                     location.href='/';
                 },
                 error : function(jqXHR, status, error){
-
                     if(jqXHR.status == '401'){
                         alert('로그인 후 이용해주세요');
                         location.href='/members/login';
                     } else{
                         alert(jqXHR.responseText);
                     }
-
                 }
             });
         }
@@ -131,35 +126,32 @@
                     location.href='/';
                 },
                 error : function(jqXHR, status, error){
-
                     if(jqXHR.status == '401'){
                         alert('로그인 후 이용해주세요');
                         location.href='/members/login';
                     } else{
                         alert(jqXHR.responseText);
                     }
-
                 }
             });
         }
-
     </script>
 </th:block>
 
-
 <div layout:fragment="content" style="margin-left:25%;margin-right:25%">
-
     <input type="hidden" id="itemId" th:value="${item.id}">
 
     <div class="d-flex">
         <div class="repImgDiv">
-            <img th:src="${item.itemImgDtoList[0].imgUrl}" class = "rounded repImg" th:alt="${item.itemNm}">
+            <img th:src="${item.itemImgDtoList[0].imgUrl}" class="rounded repImg" th:alt="${item.itemNm}">
         </div>
         <div class="wd50">
-            <span th:if="${item.itemSellStatus == T(com.shop.constant.ItemSellStatus).SELL}" class="badge badge-primary mgb-15">
+            <span th:if="${item != null && item.itemSellStatus != null && item.itemSellStatus.name() == 'SELL'}"
+                  class="badge badge-primary mgb-15">
                 판매중
             </span>
-            <span th:unless="${item.itemSellStatus == T(com.shop.constant.ItemSellStatus).SELL}" class="badge btn-danger mgb-15" >
+            <span th:unless="${item != null && item.itemSellStatus != null && item.itemSellStatus.name() == 'SELL'}"
+                  class="badge btn-danger mgb-15">
                 품절
             </span>
             <div class="h4" th:text="${item.itemNm}"></div>
@@ -183,11 +175,13 @@
                 <h5>결제 금액</h5>
                 <h3 name="totalPrice" id="totalPrice" class="font-weight-bold"></h3>
             </div>
-            <div th:if="${item.itemSellStatus == T(com.shop.constant.ItemSellStatus).SELL}" class="text-right">
+            <div th:if="${item != null && item.itemSellStatus != null && item.itemSellStatus.name() == 'SELL'}"
+                 class="text-right">
                 <button type="button" class="btn btn-outline-dark" onclick="addCart()">장바구니 담기</button>
                 <button type="button" class="btn btn-dark" onclick="order()">주문하기</button>
             </div>
-            <div th:unless="${item.itemSellStatus == T(com.shop.constant.ItemSellStatus).SELL}" class="text-right">
+            <div th:unless="${item != null && item.itemSellStatus != null && item.itemSellStatus.name() == 'SELL'}"
+                 class="text-right">
                 <button type="button" class="btn btn-danger btn-lg">품절</button>
             </div>
         </div>
@@ -202,9 +196,9 @@
     </div>
 
     <div th:each="itemImg : ${item.itemImgDtoList}" class="text-center">
-        <img th:if="${not #strings.isEmpty(itemImg.imgUrl)}" th:src="${itemImg.imgUrl}" class="rounded mgb-15" width="800">
+        <img th:if="${not #strings.isEmpty(itemImg.imgUrl)}" th:src="${itemImg.imgUrl}"
+             class="rounded mgb-15" width="800">
     </div>
-
 </div>
 
 </html>
